@@ -12,4 +12,18 @@ require "wambl_zendesk/ticket_field"
 require "wambl_zendesk/attachment"
 
 module WamblZendesk
+  class Instance
+    include WamblZendesk::Requester
+    alias :post :get
+    alias :put :get
+    alias :delete :get
+    def initialize
+      @config ||= WamblZendesk::Configuration.new
+      yield(@config) if block_given?
+      @config
+    end
+    def config
+      @config || self.configure
+    end
+  end
 end
