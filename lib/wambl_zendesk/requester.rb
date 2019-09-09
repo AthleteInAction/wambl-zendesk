@@ -17,12 +17,14 @@ module WamblZendesk
 
         new_path = uri.path
 
-        if __callee__.to_s.downcase == "get"
+        if __callee__.to_s.downcase == "get" || new_path.include?("upload")
           query_sets = []
-          query_sets << uri.query
-          query_sets << _params.to_query
-          new_path << "?" if query_sets.count > 0
-          new_path << query_sets.join('&')
+          query_sets << uri.query if uri.query
+          query_sets << _params.to_query if !new_path.include?("upload") && _params.count > 0
+          if query_sets.count > 0
+            new_path << "?"
+            new_path << query_sets.join('&')
+          end
         end
 
         http = Net::HTTP.new(WamblZendesk.config.uri.host,WamblZendesk.config.uri.port)
@@ -30,7 +32,8 @@ module WamblZendesk
         http.use_ssl = WamblZendesk.config.uri.scheme == 'https'
 
         request = "Net::HTTP::#{__callee__.to_s.camelize}".constantize.new(new_path)
-        if ["post","put"].include?(__callee__.to_s.downcase)
+
+        if ["post","put","patch"].include?(__callee__.to_s.downcase)
           if new_path.include?('upload') || new_path.include?('/attachments')
             request.content_type = 'application/*'
             request.body = _params
@@ -38,7 +41,9 @@ module WamblZendesk
             request.content_type = 'application/json'
             request.body = _params.to_json
           end
+          request.content_type = 'application/merge-patch+json' if __callee__.to_s.downcase == "patch"
         end
+
         request.basic_auth("#{WamblZendesk.config.email}/token",WamblZendesk.config.token)
         response = http.request(request)
 
@@ -47,10 +52,15 @@ module WamblZendesk
       end
       alias :post :get
       alias :put :get
+      alias :patch :get
       alias :delete :get
     end
 
-    def get _path, _params = {}
+    def get _path, _params = {}#, _last = {}
+
+      # _path = "/api/v2/#{_path.to_s}" if _path.class.name == 'Symbol'
+      # _path << "/#{_params}" if _params.class.name != 'Hash'
+      # _params = _last if _last.try(:class).try(:name) == "Hash"
 
       a = Time.now
 
@@ -73,7 +83,8 @@ module WamblZendesk
       http.use_ssl = self.config.uri.scheme == 'https'
 
       request = "Net::HTTP::#{__callee__.to_s.camelize}".constantize.new(new_path)
-      if ["post","put"].include?(__callee__.to_s.downcase)
+
+      if ["post","put","patch"].include?(__callee__.to_s.downcase)
         if new_path.include?('upload') || new_path.include?('/attachments')
           request.content_type = 'application/*'
           request.body = _params
@@ -81,7 +92,9 @@ module WamblZendesk
           request.content_type = 'application/json'
           request.body = _params.to_json
         end
+        request.content_type = 'application/merge-patch+json' if __callee__.to_s.downcase == "patch"
       end
+
       request.basic_auth("#{self.config.email}/token",self.config.token)
       response = http.request(request)
 

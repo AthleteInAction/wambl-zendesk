@@ -6,6 +6,7 @@ module WamblZendesk
     attr_reader :uri
     attr_accessor :subdomain
     attr_accessor :rpm
+    attr_accessor :api_path
     def subdomain=(value)
       @subdomain = value
       @uri = URI.parse("https://#{@subdomain}.zendesk.com")
@@ -15,6 +16,7 @@ module WamblZendesk
     attr_accessor :token
     def initialize
       self.rpm = 700
+      self.api_path = "/api/v2"
     end
     def [](value)
       self.public_send(value)

@@ -42,9 +42,9 @@ DEPENDENCIES
   activesupport
   awesome_print
   bundler (~> 1.16)
-  wambl_zendesk!
   rake (~> 10.0)
   rspec (~> 3.2)
+  wambl_zendesk!
 
 BUNDLED WITH
-   1.16.1
+   1.17.1
